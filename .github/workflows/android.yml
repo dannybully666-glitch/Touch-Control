@@ -1,55 +1,50 @@
-name: Android Legacy Build (API 21)
+name: Android Legacy Build
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # ---- Java 8 (MANDATORY for old Gradle) ----
-      - name: Set up Java 8
+      - name: Setup Java 8 (REQUIRED)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 8
 
-      # ---- Install OLD Android SDK (NOT cmdline-tools) ----
-      - name: Install Android SDK (Legacy)
+      - name: Setup Android SDK
         run: |
-          mkdir -p $HOME/android-sdk
-          cd $HOME/android-sdk
-
-          wget https://dl.google.com/android/repository/tools_r25.2.5-linux.zip
-          unzip tools_r25.2.5-linux.zip
-
           export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$PATH
+          export ANDROID_SDK_ROOT=$ANDROID_HOME
+          mkdir -p $ANDROID_HOME
 
-          yes | sdkmanager \
+          curl -s https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -o cmdline.zip
+          unzip -q cmdline.zip
+          mkdir -p $ANDROID_HOME/cmdline-tools/latest
+          mv cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
+
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
             "platform-tools" \
-            "build-tools;21.1.2" \
-            "platforms;android-21"
+            "platforms;android-21" \
+            "build-tools;21.1.2"
 
-      # ---- Make Gradle wrapper executable ----
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
 
-      # ---- Build Debug APK ----
-      - name: Build Debug APK
-        env:
-          ANDROID_HOME: ${{ runner.home }}/android-sdk
-        run: ./gradlew assembleDebug --no-daemon
+      - name: Create local.properties
+        run: |
+          echo "sdk.dir=$HOME/android-sdk" > local.properties
 
-      # ---- Upload APK ----
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: app/build/outputs/apk/**/*.apk
+      - name: Build
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
