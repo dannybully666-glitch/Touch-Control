@@ -2,7 +2,7 @@ name: Android CI Build
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
   pull_request:
 
 jobs:
@@ -21,28 +21,25 @@ jobs:
           distribution: temurin
           java-version: 11
 
-      - name: Pre-accept Android licenses
+      - name: Accept licenses
         run: |
           mkdir -p $ANDROID_SDK_ROOT/licenses
           echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $ANDROID_SDK_ROOT/licenses/android-sdk-license
           echo "84831b9409646a918e30573bab4c9c91346d8abd" > $ANDROID_SDK_ROOT/licenses/android-sdk-preview-license
-          echo "33b6a2e9c4b39b7e0e35c9f9d8c64d4c4e5e7e3f" > $ANDROID_SDK_ROOT/licenses/android-googletv-license
 
       - uses: android-actions/setup-android@v3
-        with:
-          accept-android-sdk-licenses: false
 
-      - name: Install Android SDK packages
+      - name: Install SDK
         run: |
           sdkmanager \
             "platform-tools" \
             "platforms;android-33" \
             "build-tools;33.0.2"
 
-      - name: Grant execute permission
+      - name: Grant gradle permission
         run: chmod +x ./gradlew
 
-      - name: Build Debug APK
+      - name: Build APK
         run: ./gradlew assembleDebug
 
       - uses: actions/upload-artifact@v4
