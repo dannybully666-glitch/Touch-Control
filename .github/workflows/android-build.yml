@@ -21,21 +21,23 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # 🔥 THIS IS THE CRITICAL FIX
+      # Accept licenses manually (already proven working)
       - name: Pre-accept Android licenses
         run: |
-          mkdir -p /usr/local/lib/android/sdk/licenses
-          echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > /usr/local/lib/android/sdk/licenses/android-sdk-license
-          echo "84831b9409646a918e30573bab4c9c91346d8abd" > /usr/local/lib/android/sdk/licenses/android-sdk-preview-license
-          echo "33b6a2e9c4b39b7e0e35c9f9d8c64d4c4e5e7e3f" > /usr/local/lib/android/sdk/licenses/android-googletv-license
+          mkdir -p $ANDROID_SDK_ROOT/licenses
+          echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $ANDROID_SDK_ROOT/licenses/android-sdk-license
+          echo "84831b9409646a918e30573bab4c9c91346d8abd" > $ANDROID_SDK_ROOT/licenses/android-sdk-preview-license
+          echo "33b6a2e9c4b39b7e0e35c9f9d8c64d4c4e5e7e3f" > $ANDROID_SDK_ROOT/licenses/android-googletv-license
 
+      # Only install SDK tools (no packages here)
       - uses: android-actions/setup-android@v3
         with:
-          packages: |
-            platform-tools
-            platforms;android-33
-            build-tools;33.0.2
           accept-android-sdk-licenses: false
+
+      # Install packages manually (THIS is the key)
+      - name: Install Android SDK packages
+        run: |
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
       - name: Grant execute permission
         run: chmod +x ./gradlew
