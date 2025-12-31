@@ -6,39 +6,39 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04   # IMPORTANT: older image
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Java 8 ONLY
       - name: Set up Java 8
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 8
 
-      # Manually install OLD Android SDK tools
       - name: Install legacy Android SDK
         run: |
-          mkdir -p $HOME/android-sdk
-          cd $HOME/android-sdk
+          mkdir -p /home/runner/android-sdk
+          cd /home/runner/android-sdk
 
           wget https://dl.google.com/android/repository/tools_r25.2.5-linux.zip
           unzip tools_r25.2.5-linux.zip
 
-          export ANDROID_HOME=$HOME/android-sdk
+          export ANDROID_HOME=/home/runner/android-sdk
           export PATH=$ANDROID_HOME/tools/bin:$PATH
 
           yes | sdkmanager "platform-tools" "build-tools;23.0.3" "platforms;android-23"
+
+      - name: Write local.properties
+        run: |
+          echo "sdk.dir=/home/runner/android-sdk" > local.properties
 
       - name: Grant Gradle permissions
         run: chmod +x gradlew
 
       - name: Build Debug APK
-        env:
-          ANDROID_HOME: $HOME/android-sdk
         run: ./gradlew assembleDebug
 
       - name: Upload APK
