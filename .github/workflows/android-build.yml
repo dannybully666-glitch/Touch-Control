@@ -21,7 +21,6 @@ jobs:
           distribution: temurin
           java-version: 11
 
-      # Accept licenses manually (already proven working)
       - name: Pre-accept Android licenses
         run: |
           mkdir -p $ANDROID_SDK_ROOT/licenses
@@ -29,15 +28,16 @@ jobs:
           echo "84831b9409646a918e30573bab4c9c91346d8abd" > $ANDROID_SDK_ROOT/licenses/android-sdk-preview-license
           echo "33b6a2e9c4b39b7e0e35c9f9d8c64d4c4e5e7e3f" > $ANDROID_SDK_ROOT/licenses/android-googletv-license
 
-      # Only install SDK tools (no packages here)
       - uses: android-actions/setup-android@v3
         with:
           accept-android-sdk-licenses: false
 
-      # Install packages manually (THIS is the key)
       - name: Install Android SDK packages
         run: |
-          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-33" \
+            "build-tools;33.0.2"
 
       - name: Grant execute permission
         run: chmod +x ./gradlew
